@@ -33,7 +33,11 @@ The JSON must match this exact shape:
   "expected_outcome": "what the leader should see improved after 12 weeks"
 }
 Keep all values concise — max 2 sentences per field. Be specific to the leader's role,
-stack, ane funnel stage they named.`;
+stack, ane funnel stage they named.
+IMPORTANT: Always use the exact timeframe the user provided. Never
+substitute a different timeframe. If the user said 4 weeks, all
+references to time in your response must say 4 weeks — not 12 weeks
+or any other duration.`;
 
 export const MODULE_SELECTOR_SYSTEM = `You are the Empower AI Pathways curriculum advisor.
 You return ONLY a JSON array — no preamble, no commentary, no markdown fences.
@@ -131,7 +135,7 @@ export function buildEmpowerPrompt(data: IntakeData): string {
     `Goal: ${data.goal}`,
     `Funnel stage that is leaking: ${data.funnelStage}`,
     `Current tech stack: ${data.stack}`,
-    `Timeframe: ${data.timeframe}`,
+    `Timeframe (use this EXACTLY in your response): ${data.timeframe}`,
     "",
     "Generate the plan for this leader.",
   ].join("\n");
