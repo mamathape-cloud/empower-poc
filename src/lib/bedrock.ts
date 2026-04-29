@@ -5,7 +5,6 @@ import {
 import {
   BedrockClient,
   ListFoundationModelsCommand,
-  type FoundationModelSummary,
 } from "@aws-sdk/client-bedrock";
 
 function getRequiredEnv(name: string): string {
@@ -46,8 +45,7 @@ function getControlPlaneClient(): BedrockClient {
 
 let resolvedModelIdPromise: Promise<string> | null = null;
 
-function modelRank(summary: FoundationModelSummary): number {
-  const modelId = summary.modelId ?? "";
+function modelRank(modelId: string): number {
   const dateMatch = modelId.match(/(20\d{2})(\d{2})(\d{2})/);
   if (dateMatch) {
     const [, y, m, d] = dateMatch;
@@ -76,15 +74,15 @@ async function resolveModelId(): Promise<string> {
         new ListFoundationModelsCommand({
           byProvider: "Anthropic",
           byOutputModality: "TEXT",
-          byInferenceType: "ON_DEMAND",
         })
       );
 
       const candidates = (response.modelSummaries ?? [])
-        .filter((model) => model.modelId)
+        .map((model) => model.modelId?.trim() ?? "")
+        .filter((modelId): modelId is string => modelId.length > 0)
         .sort((a, b) => modelRank(b) - modelRank(a));
 
-      const latest = candidates[0]?.modelId;
+      const latest = candidates[0];
       if (!latest) {
         throw new Error(
           "Could not resolve a Bedrock model. Set BEDROCK_MODEL_ID explicitly."
@@ -109,6 +107,11 @@ export async function callBedrock(
   };
   if (systemPrompt) body.system = systemPrompt;
   const modelId = await resolveModelId();
+  if (!modelId.trim()) {
+    throw new Error(
+      "Resolved Bedrock model id was empty. Set BEDROCK_MODEL_ID explicitly."
+    );
+  }
 
   const command = new InvokeModelCommand({
     modelId,
