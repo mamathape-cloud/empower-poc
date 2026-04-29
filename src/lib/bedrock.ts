@@ -49,6 +49,12 @@ function getRuntimeClient(): BedrockRuntimeClient {
 async function getBestAvailableModel(
   client: BedrockRuntimeClient
 ): Promise<string> {
+  const envModelId = process.env.BEDROCK_MODEL_ID?.trim();
+  if (envModelId) {
+    console.log(`Using model from environment variable: ${envModelId}`);
+    return envModelId;
+  }
+
   const { region, credentials } = client.config;
   const listClient = new BedrockClient({ region, credentials });
 
